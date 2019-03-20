@@ -442,6 +442,7 @@ class Settings(BaseSettings):
         # dicts, and we want to update, not replace, default dicts with the
         # values given by the user
         super(Settings, self).__init__()
+        ## 将 default_settings.py 中所有配置设置到 settings 实例中
         self.setmodule(default_settings, 'default')
         # Promote default dictionaries to BaseSettings instances for per-key
         # priorities

@@ -81,9 +81,13 @@ class Crawler(object):
         self.crawling = True
 
         try:
+            ## 从 spiderloader 中找到爬虫类。并实例化该爬虫类
             self.spider = self._create_spider(*args, **kwargs)
+            ## 创建引擎
             self.engine = self._create_engine()
+            ## 调用爬虫类的 start_requests 方法，获取请求对象
             start_requests = iter(self.spider.start_requests())
+            ## 执行引擎的 open_spider 方法，传入爬虫实例和初始请求对象
             yield self.engine.open_spider(self.spider, start_requests)
             yield defer.maybeDeferred(self.engine.start)
         except Exception:
@@ -139,6 +143,7 @@ class CrawlerRunner(object):
         if isinstance(settings, dict) or settings is None:
             settings = Settings(settings)
         self.settings = settings
+        ## 获取爬虫加载器
         self.spider_loader = _get_spider_loader(settings)
         self._crawlers = set()
         self._active = set()
@@ -177,11 +182,13 @@ class CrawlerRunner(object):
             raise ValueError(
                 'The crawler_or_spidercls argument cannot be a spider object, '
                 'it must be a spider class (or a Crawler object)')
+        ## 创建 crawler
         crawler = self.create_crawler(crawler_or_spidercls)
         return self._crawl(crawler, *args, **kwargs)
 
     def _crawl(self, crawler, *args, **kwargs):
         self.crawlers.add(crawler)
+        ## 调用 Crawler 的 crawl 方法
         d = crawler.crawl(*args, **kwargs)
         self._active.add(d)
 
@@ -213,8 +220,10 @@ class CrawlerRunner(object):
         return self._create_crawler(crawler_or_spidercls)
 
     def _create_crawler(self, spidercls):
+        ## 如果是字符串，则从 spider_loader 中加载这个爬虫类
         if isinstance(spidercls, six.string_types):
             spidercls = self.spider_loader.load(spidercls)
+        ## 否则创建一个 Crawler
         return Crawler(spidercls, self.settings)
 
     def stop(self):
@@ -261,7 +270,9 @@ class CrawlerProcess(CrawlerRunner):
     """
 
     def __init__(self, settings=None, install_root_handler=True):
+        ## 父类初始化
         super(CrawlerProcess, self).__init__(settings)
+        ## 信号和 log 初始化
         install_shutdown_handlers(self._signal_shutdown)
         configure_logging(self.settings, install_root_handler)
         log_scrapy_info(self.settings)
@@ -299,10 +310,18 @@ class CrawlerProcess(CrawlerRunner):
                 return
             d.addBoth(self._stop_reactor)
 
+        ## 为 reactor 安装解析器
+        ## 是 Twisted 模块的事件管理器，只要把需要执行的事件方法注册到 reactor 中，然后
+        ## 调用它的 run 方法，它就会帮你执行注册好的事件方法，如果遇到网络 IO 等待，它会
+        ## 自动帮你切换可执行的事件方法，非常高效
         reactor.installResolver(self._get_dns_resolver())
+        ## 获取线程池
         tp = reactor.getThreadPool()
+        ## 调整 reactor 的线程池大小（通过修改 REACTOR_THREADPOOL_MAXSIZE 调整）
         tp.adjustPoolsize(maxthreads=self.settings.getint('REACTOR_THREADPOOL_MAXSIZE'))
+        ## 添加系统事件触发器
         reactor.addSystemEventTrigger('before', 'shutdown', self.stop)
+        ## 开始执行
         reactor.run(installSignalHandlers=False)  # blocking call
 
     def _get_dns_resolver(self):
@@ -330,6 +349,8 @@ class CrawlerProcess(CrawlerRunner):
 
 def _get_spider_loader(settings):
     """ Get SpiderLoader instance from settings """
+    ## 爬虫加载器会加载所有的爬虫脚本，最后生成一个 { spider_name: spider_cls, ...} 的字典
+
     if settings.get('SPIDER_MANAGER_CLASS'):
         warnings.warn(
             'SPIDER_MANAGER_CLASS option is deprecated. '

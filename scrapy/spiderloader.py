@@ -18,10 +18,12 @@ class SpiderLoader(object):
     in a Scrapy project.
     """
     def __init__(self, settings):
+        ## 根据配置文件获取存放爬虫脚本的路径
         self.spider_modules = settings.getlist('SPIDER_MODULES')
         self.warn_only = settings.getbool('SPIDER_LOADER_WARN_ONLY')
         self._spiders = {}
         self._found = defaultdict(list)
+        ## 加载所有爬虫
         self._load_all_spiders()
 
     def _check_name_duplicates(self):
@@ -42,6 +44,8 @@ class SpiderLoader(object):
             self._spiders[spcls.name] = spcls
 
     def _load_all_spiders(self):
+        ## 组装成 {spider_name: spider_cls, ...} 的字典
+
         for name in self.spider_modules:
             try:
                 for module in walk_modules(name):
