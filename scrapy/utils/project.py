@@ -14,14 +14,19 @@ DATADIR_CFG_SECTION = 'datadir'
 
 
 def inside_project():
+    ## 从系统环境变量中获取项目设置模块 'XXX.settings'
     scrapy_module = os.environ.get('SCRAPY_SETTINGS_MODULE')
     if scrapy_module is not None:
         try:
+            ## 导入项目设置模块
             import_module(scrapy_module)
         except ImportError as exc:
             warnings.warn("Cannot import scrapy settings module %s: %s" % (scrapy_module, exc))
         else:
             return True
+    ## 如果系统环境变量中没有，就近查找 scrapy.cfg，找得到就认为是在项目环境中
+    ## scrapy 命令有的是依赖项目运行的，有的命令则是全局的，不依赖项目的。这里
+    ## 主要通过就近查找 scrapy.cfg 文件来确定是否在项目环境中
     return bool(closest_scrapy_cfg())
 
 
@@ -58,12 +63,21 @@ def data_path(path, createdir=False):
 
 
 def get_project_settings():
+    ## 如果环境变量中没有 SCRAPY_SETTINGS_MODULE
     if ENVVAR not in os.environ:
+        ## 从环境变量中获取 SCRAPY_PROJECT，若无则设置 project 为 default
         project = os.environ.get('SCRAPY_PROJECT', 'default')
+        ## 在项目目录内，通过命令行工具，基于配置文件 scrapy.cfg 初始化项目环境
+        ## 找到用户配置文件 settings.py，设置到环境变量 SCRAPY_SETTINGS_MODULE 中
+        ## 将项目基路径加入到 Python 模块的解析路径集中
         init_env(project)
 
+    ## 加载默认配置文件 default_settings.py，生成 settings 实例
+    ## 用于存储 scrapy 内置组件的配置，是可定制的
     settings = Settings()
+    ## 获取用户配置文件（settings.py）的路径
     settings_module_path = os.environ.get(ENVVAR)
+    ## 更新配置：用用户配置更新默认配置
     if settings_module_path:
         settings.setmodule(settings_module_path, priority='project')
 

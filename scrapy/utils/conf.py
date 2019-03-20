@@ -81,20 +81,30 @@ def init_env(project='default', set_syspath=True):
     dir. This sets the Scrapy settings module and modifies the Python path to
     be able to locate the project module.
     """
+    ## 获取 Scrapy 配置解析器（用于解析 .cfg 配置文件）的实例
     cfg = get_config()
     if cfg.has_option('settings', project):
+        ## 将 Scrapy 中的设置模块添加到系统环境变量中
         os.environ['SCRAPY_SETTINGS_MODULE'] = cfg.get('settings', project)
+    ## 从当前项目所在目录依次向上一级目录查找 scrapy 配置文件的路径，
+    ## 返回最近的一个
     closest = closest_scrapy_cfg()
     if closest:
         projdir = os.path.dirname(closest)
         if set_syspath and projdir not in sys.path:
+            ## 将当前配置文件 scrapy.cfg 所在的目录加入到 Python 模块的解析
+            ## 路径集中
             sys.path.append(projdir)
 
 
 def get_config(use_closest=True):
     """Get Scrapy config file as a SafeConfigParser"""
+    ## 获取 Scrapy 配置文件可能的路径列表: ['/etc/scrapy.cfg', ...]
     sources = get_sources(use_closest)
+    ## 实例化一个配置解析器
     cfg = SafeConfigParser()
+    ## 读取 sources 列表中的所有配置文件（以 .cfg 结尾），将文件中的配置按一定的
+    ## 格式存储到配置解析器实例 cfg 的相关属性中
     cfg.read(sources)
     return cfg
 
