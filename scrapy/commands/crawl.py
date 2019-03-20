@@ -48,13 +48,17 @@ class Command(ScrapyCommand):
             self.settings.set('FEED_FORMAT', opts.output_format, priority='cmdline')
 
     def run(self, args, opts):
+        ## 运行爬虫
+
         if len(args) < 1:
             raise UsageError()
         elif len(args) > 1:
             raise UsageError("running 'scrapy crawl' with more than one spider is no longer supported")
+        ## 爬虫名
         spname = args[0]
 
         self.crawler_process.crawl(spname, **opts.spargs)
+        ## 启动爬虫
         self.crawler_process.start()
 
         if self.crawler_process.bootstrap_failed:

@@ -14,23 +14,38 @@ class Scheduler(object):
 
     def __init__(self, dupefilter, jobdir=None, dqclass=None, mqclass=None,
                  logunser=False, stats=None, pqclass=None):
+        ## 指纹过滤器
         self.df = dupefilter
+        ## 任务队列文件夹
         self.dqdir = self._dqdir(jobdir)
+        ## 优先级任务队列类
         self.pqclass = pqclass
+        ## 基于磁盘的任务队列类：在配置文件中可配置存储路径，每次执行后会把任务队列保存到磁盘上
         self.dqclass = dqclass
+        ## 基于内存的任务队列类：在内存中存储，下次启动则消失
         self.mqclass = mqclass
+        ## 日志是否序列化
         self.logunser = logunser
+        ## 统计
         self.stats = stats
 
     @classmethod
     def from_crawler(cls, crawler):
+        ## 根据一个爬虫对象实例化一个调度器类
+
+        ## 配置文件
         settings = crawler.settings
+        ## 从配置文件中获取指纹过滤器类
         dupefilter_cls = load_object(settings['DUPEFILTER_CLASS'])
+        ##根据配置和爬虫对象创建一个指纹过滤器（用来过滤重复请求）
         dupefilter = create_instance(dupefilter_cls, settings, crawler)
+        ## 从配置文件中依次获取基于优先级、基于磁盘任务、基于内存的任务队列类
         pqclass = load_object(settings['SCHEDULER_PRIORITY_QUEUE'])
         dqclass = load_object(settings['SCHEDULER_DISK_QUEUE'])
         mqclass = load_object(settings['SCHEDULER_MEMORY_QUEUE'])
+        ## 日志是否序列化
         logunser = settings.getbool('LOG_UNSERIALIZABLE_REQUESTS', settings.getbool('SCHEDULER_DEBUG'))
+        ## 返回一个调度器实例
         return cls(dupefilter, jobdir=job_dir(settings), logunser=logunser,
                    stats=crawler.stats, pqclass=pqclass, dqclass=dqclass, mqclass=mqclass)
 

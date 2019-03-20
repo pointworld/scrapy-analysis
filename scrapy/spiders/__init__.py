@@ -24,11 +24,13 @@ class Spider(object_ref):
     custom_settings = None
 
     def __init__(self, name=None, **kwargs):
+        ## 爬虫必须有一个 name 属性
         if name is not None:
             self.name = name
         elif not getattr(self, 'name', None):
             raise ValueError("%s must have a name" % type(self).__name__)
         self.__dict__.update(kwargs)
+        ## 如果爬虫类中没有设置 start_urls（起始 URL 列表），则默认 []
         if not hasattr(self, 'start_urls'):
             self.start_urls = []
 
@@ -48,6 +50,8 @@ class Spider(object_ref):
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
+        ## 通过类方法来实例化一个爬虫实例
+
         spider = cls(*args, **kwargs)
         spider._set_crawler(crawler)
         return spider

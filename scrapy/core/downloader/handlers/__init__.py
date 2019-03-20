@@ -14,14 +14,20 @@ logger = logging.getLogger(__name__)
 
 
 class DownloadHandlers(object):
+    ## 下载处理器
 
     def __init__(self, crawler):
         self._crawler = crawler
+        ## 存储在实例化时可接受的协议
         self._schemes = {}  # stores acceptable schemes on instancing
+        ## 存储协议对应的处理器
         self._handlers = {}  # stores instanced handlers for schemes
         self._notconfigured = {}  # remembers failed handlers
+        ## 从配置中找到 DOWNLOAD_HANDLERS_BASE，构造下载处理器
+        ## 注意：这里是调用 getwithbase 方法，取的是配置中的 XXXX_BASE 配置
         handlers = without_none_values(
             crawler.settings.getwithbase('DOWNLOAD_HANDLERS'))
+        ##  存储协议对应的类路径，后面用于实例化
         for scheme, clspath in six.iteritems(handlers):
             self._schemes[scheme] = clspath
             self._load_handler(scheme, skip_lazy=True)

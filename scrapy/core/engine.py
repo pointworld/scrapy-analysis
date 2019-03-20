@@ -56,18 +56,29 @@ class Slot(object):
 class ExecutionEngine(object):
 
     def __init__(self, crawler, spider_closed_callback):
+        ## 将爬虫实例存储在执行引擎实例中
         self.crawler = crawler
+        ## 将爬虫实例所对应的配置也存储在执行引擎实例中
         self.settings = crawler.settings
+        ## 信号
         self.signals = crawler.signals
+        ## 日志格式化器
         self.logformatter = crawler.logformatter
         self.slot = None
         self.spider = None
+        ## 是否正在运行
         self.running = False
+        ## 是否已暂停执行
         self.paused = False
+        ## 从配置文件中加载调度器类
         self.scheduler_cls = load_object(self.settings['SCHEDULER'])
+        ## 从配置文件中加载下载器类
         downloader_cls = load_object(self.settings['DOWNLOADER'])
+        ## 实例化一个下载器
         self.downloader = downloader_cls(crawler)
+        ## 实例化 scraper，它是引擎连接爬虫类的桥梁
         self.scraper = Scraper(crawler)
+        ## 指定爬虫关闭的回调函数
         self._spider_closed_callback = spider_closed_callback
 
     @defer.inlineCallbacks

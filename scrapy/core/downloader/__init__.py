@@ -74,17 +74,26 @@ def _get_concurrency_delay(concurrency, spider, settings):
 
 
 class Downloader(object):
+    ## 下载器：管理各种资源对应的下载器，在真正发起网络请求时，选取对应的下载器进行资源下载
 
     def __init__(self, crawler):
+        ## 从爬虫对象中获取配置对象
         self.settings = crawler.settings
+        ## 信号
         self.signals = crawler.signals
         self.slots = {}
         self.active = set()
+        ## 初始化下载处理器
         self.handlers = DownloadHandlers(crawler)
+        ## 从配置中获取设置的请求并发数
         self.total_concurrency = self.settings.getint('CONCURRENT_REQUESTS')
+        ## 同一域名的请求并发数
         self.domain_concurrency = self.settings.getint('CONCURRENT_REQUESTS_PER_DOMAIN')
+        ## 同一 IP 的请求并发数
         self.ip_concurrency = self.settings.getint('CONCURRENT_REQUESTS_PER_IP')
+        ## 随机延迟下载时间
         self.randomize_delay = self.settings.getbool('RANDOMIZE_DOWNLOAD_DELAY')
+        ## 初始化下载器中间件管理器
         self.middleware = DownloaderMiddlewareManager.from_crawler(crawler)
         self._slot_gc_loop = task.LoopingCall(self._slot_gc)
         self._slot_gc_loop.start(60)

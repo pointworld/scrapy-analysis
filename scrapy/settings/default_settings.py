@@ -78,9 +78,9 @@ DNS_TIMEOUT = 60
 ## 一般用来限制爬取速度，避免对服务器造成压力
 DOWNLOAD_DELAY = 0
 
-## 项目中可用的请求下载器的处理器
+## 用户可自定义协议对应的下载处理器
 DOWNLOAD_HANDLERS = {}
-## 项目中默认可用的请求下载器的处理器
+## 协议对应的默认下载处理器
 DOWNLOAD_HANDLERS_BASE = {
     'data': 'scrapy.core.downloader.handlers.datauri.DataURIDownloadHandler',
     'file': 'scrapy.core.downloader.handlers.file.FileDownloadHandler',
@@ -301,11 +301,14 @@ RETRY_PRIORITY_ADJUST = -1
 ## 是否遵守 robots 协议
 ROBOTSTXT_OBEY = False
 
-## 调度器调度的相关策略配置
+## 调度器调度的相关策略配置：默认是深度优先采集（后进先出），可以更改为广度优先采集
 
 SCHEDULER = 'scrapy.core.scheduler.Scheduler'
+## 基于磁盘的任务队列：后进先出
 SCHEDULER_DISK_QUEUE = 'scrapy.squeues.PickleLifoDiskQueue'
+## 基于内存的任务队列：后进先出
 SCHEDULER_MEMORY_QUEUE = 'scrapy.squeues.LifoMemoryQueue'
+## 基于优先级的任务队列
 SCHEDULER_PRIORITY_QUEUE = 'queuelib.PriorityQueue'
 
 SPIDER_LOADER_CLASS = 'scrapy.spiderloader.SpiderLoader'

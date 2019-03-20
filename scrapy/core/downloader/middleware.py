@@ -14,6 +14,7 @@ from scrapy.utils.conf import build_component_list
 
 
 class DownloaderMiddlewareManager(MiddlewareManager):
+    ## 下载器中间件管理器
 
     component_name = 'downloader middleware'
 
