@@ -13,14 +13,17 @@ def _isiterable(possible_iterator):
     return hasattr(possible_iterator, '__iter__')
 
 class SpiderMiddlewareManager(MiddlewareManager):
+    ## 爬虫中间件管理器
 
     component_name = 'spider middleware'
 
     @classmethod
     def _get_mwlist_from_settings(cls, settings):
+        ## 从配置 SPIDER_MIDDLEWARES_BASE 和 SPIDER_MIDDLEWARES 中获取爬虫中间件类列表
         return build_component_list(settings.getwithbase('SPIDER_MIDDLEWARES'))
 
     def _add_middleware(self, mw):
+        ## 定义爬虫中间件的一系列处理方法
         super(SpiderMiddlewareManager, self)._add_middleware(mw)
         if hasattr(mw, 'process_spider_input'):
             self.methods['process_spider_input'].append(mw.process_spider_input)

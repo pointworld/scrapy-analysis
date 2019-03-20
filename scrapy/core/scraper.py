@@ -63,12 +63,17 @@ class Slot(object):
 
 
 class Scraper(object):
+    ## 这个类其实是处于 Engine、Spiders、Pipeline 之间，是连通这 3 个组件的桥梁
 
     def __init__(self, crawler):
         self.slot = None
+        ## 实例化爬虫中间件管理器
         self.spidermw = SpiderMiddlewareManager.from_crawler(crawler)
+        ## 从配置中加载 Pipeline 处理器类
         itemproc_cls = load_object(crawler.settings['ITEM_PROCESSOR'])
+        ## 实例化 Pipeline 处理器
         self.itemproc = itemproc_cls.from_crawler(crawler)
+        ## 从配置中获取同时处理 item 的并发数
         self.concurrent_items = crawler.settings.getint('CONCURRENT_ITEMS')
         self.crawler = crawler
         self.signals = crawler.signals

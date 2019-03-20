@@ -74,9 +74,9 @@ class ExecutionEngine(object):
         self.scheduler_cls = load_object(self.settings['SCHEDULER'])
         ## 从配置文件中加载下载器类
         downloader_cls = load_object(self.settings['DOWNLOADER'])
-        ## 实例化一个下载器
+        ## 实例化下载器
         self.downloader = downloader_cls(crawler)
-        ## 实例化 scraper，它是引擎连接爬虫类的桥梁
+        ## 实例化 scraper，它是引擎连接爬虫类和管道类的桥梁
         self.scraper = Scraper(crawler)
         ## 指定爬虫关闭的回调函数
         self._spider_closed_callback = spider_closed_callback

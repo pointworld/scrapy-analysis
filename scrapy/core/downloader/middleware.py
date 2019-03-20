@@ -20,15 +20,20 @@ class DownloaderMiddlewareManager(MiddlewareManager):
 
     @classmethod
     def _get_mwlist_from_settings(cls, settings):
+        ## 从配置 DOWNLOADER_MIDDLEWARES_BASE 和 DOWNLOADER_MIDDLEWARES 中获取所有下载器中间件
         return build_component_list(
             settings.getwithbase('DOWNLOADER_MIDDLEWARES'))
 
     def _add_middleware(self, mw):
+        ## 定义下载器中间件中处理请求、响应、异常时需要执行的一连串方法
         if hasattr(mw, 'process_request'):
+            ## 处理请求的方法向双端队列的右侧追加
             self.methods['process_request'].append(mw.process_request)
         if hasattr(mw, 'process_response'):
+            ## 处理响应的方法向双端队列的左侧追加
             self.methods['process_response'].appendleft(mw.process_response)
         if hasattr(mw, 'process_exception'):
+            ## 处理异常的方法向双端队列的左侧追加
             self.methods['process_exception'].appendleft(mw.process_exception)
 
     def download(self, download_func, request, spider):
