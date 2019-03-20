@@ -320,11 +320,18 @@ SPIDER_MIDDLEWARES = {}
 ## 默认的爬虫中间件
 SPIDER_MIDDLEWARES_BASE = {
     # Engine side
+
+    ## 会针对状态码 200 的响应进行相关处理
     'scrapy.spidermiddlewares.httperror.HttpErrorMiddleware': 50,
+    ## 如果 Spider 中定义了 allowed_domains，会自动过滤除此之外的域名请求
     'scrapy.spidermiddlewares.offsite.OffsiteMiddleware': 500,
+    ## 追加 Referer 头信息
     'scrapy.spidermiddlewares.referer.RefererMiddleware': 700,
+    ## 控制和过滤 URL 长度超过配置的请求
     'scrapy.spidermiddlewares.urllength.UrlLengthMiddleware': 800,
+    ## 过滤超过配置深度的抓取请求
     'scrapy.spidermiddlewares.depth.DepthMiddleware': 900,
+
     # Spider side
 }
 
