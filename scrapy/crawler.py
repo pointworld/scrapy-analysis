@@ -81,7 +81,7 @@ class Crawler(object):
         self.crawling = True
 
         try:
-            ## 从 spiderloader 中找到爬虫类。并实例化该爬虫类
+            ## 从 spiderloader 中找到爬虫类，并实例化该爬虫类
             self.spider = self._create_spider(*args, **kwargs)
             ## 创建引擎
             self.engine = self._create_engine()
@@ -108,9 +108,11 @@ class Crawler(object):
             raise
 
     def _create_spider(self, *args, **kwargs):
+        ## 调用爬虫类的 from_crawler 方法实例化爬虫类
         return self.spidercls.from_crawler(self, *args, **kwargs)
 
     def _create_engine(self):
+        ## 返回一个执行引擎类的实例
         return ExecutionEngine(self, lambda _: self.stop())
 
     @defer.inlineCallbacks
@@ -223,7 +225,7 @@ class CrawlerRunner(object):
         ## 如果是字符串，则从 spider_loader 中加载这个爬虫类
         if isinstance(spidercls, six.string_types):
             spidercls = self.spider_loader.load(spidercls)
-        ## 否则创建一个 Crawler
+        ## 否则，根据该 spidercls 和配置实例创建一个 Crawler 实例
         return Crawler(spidercls, self.settings)
 
     def stop(self):

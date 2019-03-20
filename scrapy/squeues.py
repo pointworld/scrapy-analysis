@@ -31,13 +31,19 @@ def _pickle_serialize(obj):
     except (pickle.PicklingError, AttributeError, TypeError) as e:
         raise ValueError(str(e))
 
+## 先进先出磁盘队列（pickle 序列化）
 PickleFifoDiskQueue = _serializable_queue(queue.FifoDiskQueue, \
     _pickle_serialize, pickle.loads)
+## 后进先出磁盘队列（pickle 序列化）
 PickleLifoDiskQueue = _serializable_queue(queue.LifoDiskQueue, \
     _pickle_serialize, pickle.loads)
+## 先进先出磁盘队列（marshal 序列化）
 MarshalFifoDiskQueue = _serializable_queue(queue.FifoDiskQueue, \
     marshal.dumps, marshal.loads)
+## 后进先出磁盘队列（marshal 序列化）
 MarshalLifoDiskQueue = _serializable_queue(queue.LifoDiskQueue, \
     marshal.dumps, marshal.loads)
+## 先进先出内存队列
 FifoMemoryQueue = queue.FifoMemoryQueue
+## 后进先出内存队列
 LifoMemoryQueue = queue.LifoMemoryQueue

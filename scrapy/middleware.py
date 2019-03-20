@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class MiddlewareManager(object):
     """Base class for implementing middleware managers"""
+    ## 中间件管理器：所有中间件的基类
 
     component_name = 'foo middleware'
 
