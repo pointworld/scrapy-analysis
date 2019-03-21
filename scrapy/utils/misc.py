@@ -58,6 +58,7 @@ def walk_modules(path):
 
     For example: walk_modules('scrapy.utils')
     """
+    ## 从一个给定的模块路径中加载该模块和他的所有子模块，组成一个列表并返回
 
     mods = []
     ## importlib.import_module 的作用是根据路径动态导入模块
@@ -66,6 +67,7 @@ def walk_modules(path):
     if hasattr(mod, '__path__'):
         for _, subpath, ispkg in iter_modules(mod.__path__):
             fullpath = path + '.' + subpath
+            ## 如果是包，则递归调用该函数
             if ispkg:
                 mods += walk_modules(fullpath)
             else:

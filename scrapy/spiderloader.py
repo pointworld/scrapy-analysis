@@ -21,7 +21,9 @@ class SpiderLoader(object):
         ## 根据配置文件获取存放爬虫脚本的路径
         self.spider_modules = settings.getlist('SPIDER_MODULES')
         self.warn_only = settings.getbool('SPIDER_LOADER_WARN_ONLY')
+        ## 用于储存爬虫名与爬虫类的映射
         self._spiders = {}
+        ## 用于储存爬虫名与 ['爬虫模块名', '爬虫类名'] 的映射
         self._found = defaultdict(list)
         ## 加载所有爬虫
         self._load_all_spiders()

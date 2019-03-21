@@ -25,6 +25,8 @@ class Command(ScrapyCommand):
                           help="format to use for dumping items with -o")
 
     def process_options(self, args, opts):
+        ## 用选项更新配置
+
         ScrapyCommand.process_options(self, args, opts)
         try:
             opts.spargs = arglist_to_dict(opts.spargs)
@@ -57,6 +59,7 @@ class Command(ScrapyCommand):
         ## 爬虫名
         spname = args[0]
 
+        ## 用给定的参数运行一个爬虫
         self.crawler_process.crawl(spname, **opts.spargs)
         ## 启动爬虫
         self.crawler_process.start()

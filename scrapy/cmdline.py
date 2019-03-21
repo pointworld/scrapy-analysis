@@ -96,6 +96,8 @@ def _print_unknown_command(settings, cmdname, inproject):
     print('Use "scrapy" to see available commands')
 
 def _run_print_help(parser, func, *a, **kw):
+    ## 执行给定的 func 函数出错时，打印帮助文档，再退出程序
+
     try:
         func(*a, **kw)
     except UsageError as e:
@@ -144,8 +146,8 @@ def execute(argv=None, settings=None):
     inproject = inside_project()
     ## 读取 commands 文件夹，把所有的命令类转换为 {cmd_name: cmd_instance, ...} 的字典
     cmds = _get_commands_dict(settings, inproject)
-    ## 从命令行参数中解析出执行的是哪个命令
-    ## 例如，若命令行中执行的命令是 scrapy crawl xxx，这里的 cmdname 就是 'crawl'
+    ## 从命令行参数中解析出执行的是哪个子命令
+    ## 例如，若命令行中执行的命令是 `scrapy crawl xxx`，这里的 cmdname 就是 'crawl'
     cmdname = _pop_command_name(argv)
     ## optparse 模块，可以让程序员能轻松设计出简单明了、易于使用、符合标准的 Unix
     ## 命令例程式的帮助文档
@@ -162,18 +164,27 @@ def execute(argv=None, settings=None):
 
     ## 根据命令名称找到对应的命令实例
     cmd = cmds[cmdname]
+    ## cmd.syntax 方法返回命令的用法
     parser.usage = "scrapy %s %s" % (cmdname, cmd.syntax())
+    ## cmd.long_desc 方法返回对命令的描述
     parser.description = cmd.long_desc()
-    ## 设置项目配置和级别为 command
+    ## 设置命令实例的默认配置并指定优先级为 command
     settings.setdict(cmd.default_settings, priority='command')
+    ## 设置命令实例的配置
     cmd.settings = settings
-    ## 添加解析规则
+    ## 为命令实例添加解析规则
     cmd.add_options(parser)
     ## 解析命令参数，并交由 Scrapy 命令实例处理
+    ## 对于命令 `scrapy crawl xxx` 而言，argv[1:] 为 ['crawl', 'xxx']
+    ## opts = {'logfile': xxx, 'loglevel': xxx, ...}
+    ## args = ['xxx']
     opts, args = parser.parse_args(args=argv[1:])
+    ## 执行命令实例的 process_options 方法，若执行出错时，打印相关帮助文档后再退出程序
+    ## 在执行命令前，可以为命令添加一些可选项，用于在命令行级别下，更新配置中的相应配置项
     _run_print_help(parser, cmd.process_options, args, opts)
 
-    ## 初始化 CrawlerProcess 实例，并赋值给命令实例的 crawler_process 属性
+    ## 根据配置，初始化 CrawlerProcess（爬虫进程） 类的实例
+    ## 并赋值给命令实例的 crawler_process 属性
     cmd.crawler_process = CrawlerProcess(settings)
     ## 执行命令实例的 run 方法
     ## 如果运行命令是 scrapy crawl <spider_name>，则运行的就是

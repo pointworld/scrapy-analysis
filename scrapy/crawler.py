@@ -134,6 +134,7 @@ class CrawlerRunner(object):
     accordingly) unless writing scripts that manually handle the crawling
     process. See :ref:`run-from-script` for an example.
     """
+    ## 这是一个帮助器类，用来在一个已经建立好的 Twisted reactor 中，追踪、管理和运行爬虫
 
     crawlers = property(
         lambda self: self._crawlers,
@@ -144,9 +145,11 @@ class CrawlerRunner(object):
     def __init__(self, settings=None):
         if isinstance(settings, dict) or settings is None:
             settings = Settings(settings)
+        ## 配置
         self.settings = settings
-        ## 获取爬虫加载器
+        ## 获取爬虫加载器，用来根据爬虫名加载爬虫类
         self.spider_loader = _get_spider_loader(settings)
+        ## 爬虫集合
         self._crawlers = set()
         self._active = set()
         self.bootstrap_failed = False
@@ -180,11 +183,13 @@ class CrawlerRunner(object):
 
         :param dict kwargs: keyword arguments to initialize the spider
         """
+        ## 用给定的参数运行一个爬虫
+
         if isinstance(crawler_or_spidercls, Spider):
             raise ValueError(
                 'The crawler_or_spidercls argument cannot be a spider object, '
                 'it must be a spider class (or a Crawler object)')
-        ## 创建 crawler
+        ## 创建爬虫实例
         crawler = self.create_crawler(crawler_or_spidercls)
         return self._crawl(crawler, *args, **kwargs)
 
@@ -213,6 +218,8 @@ class CrawlerRunner(object):
           a spider with this name in a Scrapy project (using spider loader),
           then creates a Crawler instance for it.
         """
+        ## 返回一个爬虫实例
+
         if isinstance(crawler_or_spidercls, Spider):
             raise ValueError(
                 'The crawler_or_spidercls argument cannot be a spider object, '
@@ -222,10 +229,10 @@ class CrawlerRunner(object):
         return self._create_crawler(crawler_or_spidercls)
 
     def _create_crawler(self, spidercls):
-        ## 如果是字符串，则从 spider_loader 中加载这个爬虫类
+        ## 如果参数 spidercls 是字符串，则从 spider_loader 中加载这个爬虫类
         if isinstance(spidercls, six.string_types):
             spidercls = self.spider_loader.load(spidercls)
-        ## 否则，根据该 spidercls 和配置实例创建一个 Crawler 实例
+        ## 根据该 spidercls 和配置创建一个 Crawler 实例
         return Crawler(spidercls, self.settings)
 
     def stop(self):
@@ -270,16 +277,21 @@ class CrawlerProcess(CrawlerRunner):
     accordingly) unless writing scripts that manually handle the crawling
     process. See :ref:`run-from-script` for an example.
     """
+    ## 在一个进程中同时运行多个爬虫的类
 
     def __init__(self, settings=None, install_root_handler=True):
         ## 父类初始化
         super(CrawlerProcess, self).__init__(settings)
-        ## 信号和 log 初始化
+        ## 安装爬虫关闭时的处理器
         install_shutdown_handlers(self._signal_shutdown)
+        ## 为 scrapy 配置日志服务
         configure_logging(self.settings, install_root_handler)
+        ## 输出 scrapy 的相关信息（启动状态，版本...）
         log_scrapy_info(self.settings)
 
     def _signal_shutdown(self, signum, _):
+        ## 爬虫关闭时的处理器
+
         install_shutdown_handlers(self._signal_kill)
         signame = signal_names[signum]
         logger.info("Received %(signame)s, shutting down gracefully. Send again to force ",
@@ -359,8 +371,10 @@ def _get_spider_loader(settings):
             'Please use SPIDER_LOADER_CLASS.',
             category=ScrapyDeprecationWarning, stacklevel=2
         )
+    ## 爬虫加载器类的路径
     cls_path = settings.get('SPIDER_MANAGER_CLASS',
                             settings.get('SPIDER_LOADER_CLASS'))
+    ## 根据路径获取爬虫加载器类
     loader_cls = load_object(cls_path)
     try:
         verifyClass(ISpiderLoader, loader_cls)
@@ -371,4 +385,5 @@ def _get_spider_loader(settings):
             'Please add all missing methods to avoid unexpected runtime errors.',
             category=ScrapyDeprecationWarning, stacklevel=2
         )
+    ## 用配置实例化爬虫加载器类并返回
     return loader_cls.from_settings(settings.frozencopy())

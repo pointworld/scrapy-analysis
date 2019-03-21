@@ -74,6 +74,7 @@ class ScrapyCommand(object):
         parser.add_option_group(group)
 
     def process_options(self, args, opts):
+        ## 用命令行中指定的配置项参数更新配置
         try:
             self.settings.setdict(arglist_to_dict(opts.set),
                                   priority='cmdline')
