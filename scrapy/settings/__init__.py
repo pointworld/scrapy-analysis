@@ -285,8 +285,11 @@ class BaseSettings(MutableMapping):
         """
         self._assert_mutability()
         if isinstance(module, six.string_types):
+            ## 根据模块路径导入模块
             module = import_module(module)
         for key in dir(module):
+            ## 更新配置，并设置配置项的优先级别
+            ## 非全部大写的配置项或属性会被过滤掉
             if key.isupper():
                 self.set(key, getattr(module, key), priority)
 

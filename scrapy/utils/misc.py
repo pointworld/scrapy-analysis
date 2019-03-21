@@ -60,6 +60,7 @@ def walk_modules(path):
     """
 
     mods = []
+    ## importlib.import_module 的作用是根据路径动态导入模块
     mod = import_module(path)
     mods.append(mod)
     if hasattr(mod, '__path__'):

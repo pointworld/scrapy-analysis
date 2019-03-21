@@ -18,7 +18,7 @@ def _iter_command_classes(module_name):
     # TODO: add `name` attribute to commands and and merge this function with
     # scrapy.utils.spider.iter_spider_classes
     ## 迭代这个包下的所有模块，找到 ScrapyCommand 类的子类 Command
-    ## 这个过程主要是，导入commands文件夹下的所有模块，生成 { cmd_name: cmd, ... }
+    ## 这个过程主要是，导入 commands 包下的所有模块，生成 { cmd_name: cmd_instance, ... }
     ## 字典集合，如果用户在配置文件中配置了自定义的命令类，也追加进去。也就是说，
     ## 自己也可以编写自己的命令类，然后追加到配置文件中，之后就可以使用自己自定义
     ## 的命令了
@@ -32,10 +32,11 @@ def _iter_command_classes(module_name):
 
 def _get_commands_from_module(module, inproject):
     d = {}
-    ## 找到这个模块下所有的命令类 (ScrapyCommand 子类)
+    ## 找到这个 module 下所有的命令类 (ScrapyCommand 子类)
+    ## 遍历，生成命令名和命令实例的映射
     for cmd in _iter_command_classes(module):
         if inproject or not cmd.requires_project:
-            ## 生成 {cmd_name: cmd} 字典
+            ## 生成 {cmd_name: cmd_instance} 字典
             cmdname = cmd.__module__.split('.')[-1]
             d[cmdname] = cmd()
     ## 返回一个由命令名字和命令对象组成的字典
@@ -52,7 +53,7 @@ def _get_commands_from_entry_points(inproject, group='scrapy.commands'):
     return cmds
 
 def _get_commands_dict(settings, inproject):
-    ## 导入 commands 文件夹下的所有模块，生成 {cmd_name: cmd, ...} 字典
+    ## 导入 commands 包下的所有模块，生成 {cmd_name: cmd_instance, ...} 字典
     cmds = _get_commands_from_module('scrapy.commands', inproject)
     cmds.update(_get_commands_from_entry_points(inproject))
     cmds_module = settings['COMMANDS_MODULE']
@@ -105,6 +106,8 @@ def _run_print_help(parser, func, *a, **kw):
         sys.exit(2)
 
 def execute(argv=None, settings=None):
+    ## 假设我们是以 execute(['scrapy', 'crawl', 'spidername']) 的形式执行该函数
+
     if argv is None:
         argv = sys.argv
 
@@ -139,7 +142,7 @@ def execute(argv=None, settings=None):
 
     ## 执行环境是否在项目中
     inproject = inside_project()
-    ## 读取 commands 文件夹，把所有的命令类转换为 {cmd_name: cmd_instance} 的字典
+    ## 读取 commands 文件夹，把所有的命令类转换为 {cmd_name: cmd_instance, ...} 的字典
     cmds = _get_commands_dict(settings, inproject)
     ## 从命令行参数中解析出执行的是哪个命令
     ## 例如，若命令行中执行的命令是 scrapy crawl xxx，这里的 cmdname 就是 'crawl'

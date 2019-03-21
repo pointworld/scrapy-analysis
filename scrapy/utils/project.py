@@ -65,20 +65,24 @@ def data_path(path, createdir=False):
 def get_project_settings():
     ## 如果环境变量中没有 SCRAPY_SETTINGS_MODULE
     if ENVVAR not in os.environ:
-        ## 从环境变量中获取 SCRAPY_PROJECT，若无则设置 project 为 default
+        ## 从环境变量中获取 SCRAPY_PROJECT，若无则默认返回 'default'
         project = os.environ.get('SCRAPY_PROJECT', 'default')
+        ## 初始化项目环境：
         ## 在项目目录内，通过命令行工具，基于配置文件 scrapy.cfg 初始化项目环境
-        ## 找到用户配置文件 settings.py，设置到环境变量 SCRAPY_SETTINGS_MODULE 中
+        ## 找到用户配置模块（settings），设置到环境变量的 SCRAPY_SETTINGS_MODULE 中
         ## 将项目基路径加入到 Python 模块的解析路径集中
         init_env(project)
 
     ## 加载默认配置文件 default_settings.py，生成 settings 实例
-    ## 用于存储 scrapy 内置组件的配置，是可定制的
+    ## 用于存储 scrapy 内置组件的配置（默认配置），是可定制的
+    ## 这里得到的是默认配置，默认配置的优先级为 default
     settings = Settings()
     ## 获取用户配置文件（settings.py）的路径
     settings_module_path = os.environ.get(ENVVAR)
-    ## 更新配置：用用户配置更新默认配置
     if settings_module_path:
+        ## 基于 settings.py 文件的路径加载用户配置
+        ## 更新配置：用用户配置更新默认配置
+        ## 用户配置的优先级为 project
         settings.setmodule(settings_module_path, priority='project')
 
     # XXX: remove this hack
@@ -92,4 +96,5 @@ def get_project_settings():
     if env_overrides:
         settings.setdict(env_overrides, priority='project')
 
+    ## 返回配置对象
     return settings
