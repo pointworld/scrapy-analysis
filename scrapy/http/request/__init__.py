@@ -20,11 +20,16 @@ class Request(object_ref):
                  cookies=None, meta=None, encoding='utf-8', priority=0,
                  dont_filter=False, errback=None, flags=None):
 
+        ## 编码
         self._encoding = encoding  # this one has to be set first
+        ## 请求方法
         self.method = str(method).upper()
+        ## 设置 URL
         self._set_url(url)
+        ## 设置 body
         self._set_body(body)
         assert isinstance(priority, int), "Request priority not an integer: %r" % priority
+        ## 优先级
         self.priority = priority
 
         if callback is not None and not callable(callback):
@@ -32,13 +37,19 @@ class Request(object_ref):
         if errback is not None and not callable(errback):
             raise TypeError('errback must be a callable, got %s' % type(errback).__name__)
         assert callback or not errback, "Cannot use errback without a callback"
+        ## 回调函数
         self.callback = callback
+        ## 异常回调函数
         self.errback = errback
 
+        ## cookies
         self.cookies = cookies or {}
+        ## 构建请求头
         self.headers = Headers(headers or {}, encoding=encoding)
+        ## 是否需要过滤
         self.dont_filter = dont_filter
 
+        ## 附加信息
         self._meta = dict(meta) if meta else None
         self.flags = [] if flags is None else list(flags)
 

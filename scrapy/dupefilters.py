@@ -6,6 +6,7 @@ from scrapy.utils.job import job_dir
 from scrapy.utils.request import referer_str, request_fingerprint
 
 class BaseDupeFilter(object):
+    ## 过滤器基类，子类可重写一下方法
 
     @classmethod
     def from_settings(cls, settings):
@@ -15,9 +16,11 @@ class BaseDupeFilter(object):
         return False
 
     def open(self):  # can return deferred
+        ## 可重写，完成过滤器的初始化工作
         pass
 
     def close(self, reason):  # can return a deferred
+        ## 可重写，完成关闭过滤器的工作
         pass
 
     def log(self, request, spider):  # log that a request has been filtered
@@ -52,19 +55,19 @@ class RFPDupeFilter(BaseDupeFilter):
         return cls(job_dir(settings), debug)
 
     def request_seen(self, request):
-        ## 根据请求创建一个请求指纹
+        ## 根据请求生成一个请求指纹
         fp = self.request_fingerprint(request)
-        ## 如果该请求指纹存在于指纹集合中，则返回 True
+        ## 如果该请求指纹存在于指纹集合中，则认为重复，返回 True
         if fp in self.fingerprints:
             return True
-        ## 否则将该指纹加入到指纹集合中
+        ## 不重复，则将该指纹加入到指纹集合中
         self.fingerprints.add(fp)
         ## 如果存在文件，则同时将该指纹写入到文件中
         if self.file:
             self.file.write(fp + os.linesep)
 
     def request_fingerprint(self, request):
-        ## 根据请求创建指纹
+        ## 根据请求创建指纹，调用 utils.request 的 request_fingerprint 方法
         return request_fingerprint(request)
 
     def close(self, reason):

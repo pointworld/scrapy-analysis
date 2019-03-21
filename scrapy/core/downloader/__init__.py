@@ -100,11 +100,15 @@ class Downloader(object):
 
     def fetch(self, request, spider):
         def _deactivate(response):
+            ## 下载完成后删除此记录
             self.active.remove(request)
             return response
 
+        ## 下载完成前记录处理中的请求
         self.active.add(request)
+        ## 调用下载器中间件的 download 方法，并注册下载成功的回调 self._enqueue_request
         dfd = self.middleware.download(self._enqueue_request, request, spider)
+        ## 注册结束回调
         return dfd.addBoth(_deactivate)
 
     def needs_backout(self):
@@ -130,6 +134,8 @@ class Downloader(object):
         return key
 
     def _enqueue_request(self, request, spider):
+        ## 将 request 加入下载请求队列
+
         key, slot = self._get_slot(request, spider)
         request.meta['download_slot'] = key
 
@@ -142,7 +148,9 @@ class Downloader(object):
                                     request=request,
                                     spider=spider)
         deferred = defer.Deferred().addBoth(_deactivate)
+        ## 下载队列
         slot.queue.append((request, deferred))
+        ## 处理下载队列
         self._process_queue(spider, slot)
         return deferred
 
@@ -160,12 +168,16 @@ class Downloader(object):
                 return
 
         # Process enqueued requests if there are free slots to transfer for this slot
+        ## 处理下载队列
         while slot.queue and slot.free_transfer_slots() > 0:
             slot.lastseen = now
+            ## 从下载队列中取出下载请求
             request, deferred = slot.queue.popleft()
+            ## 开始下载
             dfd = self._download(slot, request, spider)
             dfd.chainDeferred(deferred)
             # prevent burst if inter-request delays were configured
+            ## 延迟
             if delay:
                 self._process_queue(spider, slot)
                 break
@@ -174,6 +186,7 @@ class Downloader(object):
         # The order is very important for the following deferreds. Do not change!
 
         # 1. Create the download deferred
+        ## 创建一个下载延迟，参数 self.handlers.download_request 是真正发起下载请求的方法
         dfd = mustbe_deferred(self.handlers.download_request, request, spider)
 
         # 2. Notify response_downloaded listeners about the recent download
@@ -184,6 +197,7 @@ class Downloader(object):
                                         request=request,
                                         spider=spider)
             return response
+        ## 注册回调
         dfd.addCallback(_downloaded)
 
         # 3. After response arrives,  remove the request from transferring

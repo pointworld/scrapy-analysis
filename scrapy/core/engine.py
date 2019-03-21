@@ -122,6 +122,8 @@ class ExecutionEngine(object):
         self.paused = False
 
     def _next_request(self, spider):
+        ## 该方法会被循环调度
+
         slot = self.slot
         if not slot:
             return
@@ -129,12 +131,18 @@ class ExecutionEngine(object):
         if self.paused:
             return
 
+        ## 是否撤销
         while not self._needs_backout(spider):
+            ## 从 scheduler 中获取下一个 request
+            ## 注意：第一次获取时，是没有的，也就是会 break 出来
+            ## 从而执行下面的逻辑
             if not self._next_request_from_scheduler(spider):
                 break
 
+        ## 如果 start_requests 有数据且不需要撤销
         if slot.start_requests and not self._needs_backout(spider):
             try:
+                ## 获取下一个种子请求
                 request = next(slot.start_requests)
             except StopIteration:
                 slot.start_requests = None
@@ -143,12 +151,20 @@ class ExecutionEngine(object):
                 logger.error('Error while obtaining start requests',
                              exc_info=True, extra={'spider': spider})
             else:
+                ## 调用 crawl， 实际是把 request 放入 scheduler 的队列中
                 self.crawl(request, spider)
 
+        ## 如果爬虫是空闲的则关闭爬虫
         if self.spider_is_idle(spider) and slot.close_if_idle:
             self._spider_idle(spider)
 
     def _needs_backout(self, spider):
+        ## 是否需要撤销，取决于 4 个条件
+        ## 1. engine 是否在运行
+        ## 2. slot 是否关闭
+        ## 3. 下载器网络下载是否超过预设
+        ## 4. scraper 处理输出是否超过预设
+
         slot = self.slot
         return not self.running \
             or slot.closing \
@@ -157,10 +173,15 @@ class ExecutionEngine(object):
 
     def _next_request_from_scheduler(self, spider):
         slot = self.slot
+        ## 从调度器中获取下一个请求
         request = slot.scheduler.next_request()
         if not request:
             return
+        ## 下载
         d = self._download(request, spider)
+
+        ## 为下载结果添加回调，下载结果可能是 Request、Response、Failure
+
         d.addBoth(self._handle_downloader_output, request, spider)
         d.addErrback(lambda f: logger.info('Error while handling downloader output',
                                            exc_info=failure_to_exc_info(f),
@@ -176,12 +197,16 @@ class ExecutionEngine(object):
         return d
 
     def _handle_downloader_output(self, response, request, spider):
+        ## 下载结果 response 必须是 Request、Response、Failure 之一
         assert isinstance(response, (Request, Response, Failure)), response
         # downloader middleware can return requests (for example, redirects)
+        ## 如果下载结果是 Request，则再次调用 crawl，执行 Scheduler 的入队逻辑
         if isinstance(response, Request):
             self.crawl(response, spider)
             return
         # response is a Response or Failure
+        ## 如果下载结果是 Response 或 Failure，则交给 scrapy 的 enqueue_scrape 方法进一步处理
+        ## 主要是与 spiders 和 pipelines 交互
         d = self.scraper.enqueue_scrape(response, request, spider)
         d.addErrback(lambda f: logger.error('Error while enqueuing downloader output',
                                             exc_info=failure_to_exc_info(f),
@@ -218,12 +243,15 @@ class ExecutionEngine(object):
     def crawl(self, request, spider):
         assert spider in self.open_spiders, \
             "Spider %r not opened when crawling: %s" % (spider.name, request)
+        ## 将请求放入调度器队列
         self.schedule(request, spider)
+        ## 调用 nextcall 的 schedule 方法，进行下一次调度
         self.slot.nextcall.schedule()
 
     def schedule(self, request, spider):
         self.signals.send_catch_log(signal=signals.request_scheduled,
                 request=request, spider=spider)
+        ## 调用调度器的 enqueue_request 方法，将请求放入调度器队列
         if not self.slot.scheduler.enqueue_request(request):
             self.signals.send_catch_log(signal=signals.request_dropped,
                                         request=request, spider=spider)
@@ -241,9 +269,11 @@ class ExecutionEngine(object):
     def _download(self, request, spider):
         slot = self.slot
         slot.add_request(request)
+        ## 下载成功的回调，返回处理过的响应
         def _on_success(response):
             assert isinstance(response, (Response, Request))
             if isinstance(response, Response):
+                ## 将请求放入响应对象的 request 属性中
                 response.request = request # tie request to response received
                 logkws = self.logformatter.crawled(request, response, spider)
                 logger.log(*logformatter_adapter(logkws), extra={'spider': spider})
@@ -251,12 +281,16 @@ class ExecutionEngine(object):
                     response=response, request=request, spider=spider)
             return response
 
+        ## 下载完成的回调，继续下一次调度
         def _on_complete(_):
             slot.nextcall.schedule()
             return _
 
+        ## 调用下载器进行下载
         dwld = self.downloader.fetch(request, spider)
+        ## 注册下载成功的回调
         dwld.addCallbacks(_on_success)
+        ## 注册下载完成的回调
         dwld.addBoth(_on_complete)
         return dwld
 
@@ -265,16 +299,25 @@ class ExecutionEngine(object):
         assert self.has_capacity(), "No free spider slot when opening %r" % \
             spider.name
         logger.info("Spider opened", extra={'spider': spider})
+        ## 注册 _next_request 调度方法，循环调度
         nextcall = CallLaterOnce(self._next_request, spider)
+        ## 初始化 scheduler
         scheduler = self.scheduler_cls.from_crawler(self.crawler)
+        ## 调用爬虫中间件的 process_start_requests 方法处理种子请求
+        ## 可以定义多个爬虫中间件，每个类都重写该方法，爬虫在调度之前会分别调用你定义好的
+        ## 爬虫中间件，来分别处理起始请求，功能独立而且维护起来更加清晰
         start_requests = yield self.scraper.spidermw.process_start_requests(start_requests, spider)
+        ## 封装 slot 对象
         slot = Slot(start_requests, close_if_idle, nextcall, scheduler)
         self.slot = slot
         self.spider = spider
+        ## 调用调度器的 open 方法
         yield scheduler.open(spider)
+        ## 调用 scraper 的 open_spider 方法
         yield self.scraper.open_spider(spider)
         self.crawler.stats.open_spider(spider)
         yield self.signals.send_catch_log_deferred(signals.spider_opened, spider=spider)
+        ## 发起调度
         slot.nextcall.schedule()
         slot.heartbeat.start(5)
 

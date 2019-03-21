@@ -21,6 +21,12 @@ class CallLaterOnce(object):
     """Schedule a function to be called in the next reactor loop, but only if
     it hasn't been already scheduled since the last time it ran.
     """
+    ## 在下一个 twisted 的 reactor 中调度一个被调用过的函数，只要该函数从上一次运行
+    ## 后没有被调度过
+    ## 这里封装了循环执行的方法类，并且注册的方法会在 twisted 的 reactor 中异步执行，以后
+    ## 执行只需调用 schedule 方法，就会注册 self 到 reactor 的 callLater 中，然后它
+    ## 会执行 __call__ 方法，进而执行我们注册的方法。而这里我们注册的方法是引擎的
+    ## _next_request，也就是说，此方法会循环调度，直到程序退出
 
     def __init__(self, func, *a, **kw):
         self._func = func

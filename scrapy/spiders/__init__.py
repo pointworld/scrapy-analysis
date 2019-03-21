@@ -83,6 +83,7 @@ class Spider(object_ref):
             for url in self.start_urls:
                 yield self.make_requests_from_url(url)
         else:
+            ## 根据子类中定义的 start_urls 属性，生成种子 request 对象
             for url in self.start_urls:
                 yield Request(url, dont_filter=True)
 

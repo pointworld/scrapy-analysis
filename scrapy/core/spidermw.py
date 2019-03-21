@@ -40,6 +40,9 @@ class SpiderMiddlewareManager(MiddlewareManager):
                 six.get_method_function(f).__name__)
 
         def process_spider_input(response):
+            ## 执行一系列爬虫中间件的 process_spider_input 方法
+            ## 再执行 scrape_func 即 call_spider 方法
+
             for method in self.methods['process_spider_input']:
                 try:
                     result = method(response=response, spider=spider)
@@ -52,6 +55,7 @@ class SpiderMiddlewareManager(MiddlewareManager):
             return scrape_func(response, request, spider)
 
         def process_spider_exception(_failure):
+            ## 执行一系列爬虫中间件的 process_spider_exception 方法
             exception = _failure.value
             for method in self.methods['process_spider_exception']:
                 result = method(response=response, exception=exception, spider=spider)
@@ -63,6 +67,7 @@ class SpiderMiddlewareManager(MiddlewareManager):
             return _failure
 
         def process_spider_output(result):
+            ## 执行一系列爬虫中间件的 process_spider_output 方法
             for method in self.methods['process_spider_output']:
                 result = method(response=response, result=result, spider=spider)
                 assert _isiterable(result), \
@@ -70,8 +75,11 @@ class SpiderMiddlewareManager(MiddlewareManager):
                     (fname(method), type(result))
             return result
 
+        ## 执行 process_spider_input 方法
         dfd = mustbe_deferred(process_spider_input, response)
+        ## 注册异常回调
         dfd.addErrback(process_spider_exception)
+        ## 注册出口回调
         dfd.addCallback(process_spider_output)
         return dfd
 

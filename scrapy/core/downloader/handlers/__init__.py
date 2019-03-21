@@ -38,6 +38,9 @@ class DownloadHandlers(object):
         """Lazy-load the downloadhandler for a scheme
         only on the first request for that scheme.
         """
+        ## 根据协议获取对应的下载处理器
+        ## 配置文件中定义好了 http、https、ftp 等资源的下载处理器
+
         if scheme in self._handlers:
             return self._handlers[scheme]
         if scheme in self._notconfigured:
@@ -49,11 +52,15 @@ class DownloadHandlers(object):
         return self._load_handler(scheme)
 
     def _load_handler(self, scheme, skip_lazy=False):
+        ## 加载协议对应的下载处理器
+
         path = self._schemes[scheme]
         try:
+            ## 根据路径加载下载处理器类
             dhcls = load_object(path)
             if skip_lazy and getattr(dhcls, 'lazy', True):
                 return None
+            ## 实例化下载处理器类
             dh = dhcls(self._crawler.settings)
         except NotConfigured as ex:
             self._notconfigured[scheme] = str(ex)
@@ -65,15 +72,20 @@ class DownloadHandlers(object):
             self._notconfigured[scheme] = str(ex)
             return None
         else:
+            ## 缓存
             self._handlers[scheme] = dh
+            ## 返回下载处理器实例
             return dh
 
     def download_request(self, request, spider):
+        ## 获取请求的协议
         scheme = urlparse_cached(request).scheme
+        ## 获取协议对应的下载处理器
         handler = self._get_handler(scheme)
         if not handler:
             raise NotSupported("Unsupported URL scheme '%s': %s" %
                                (scheme, self._notconfigured[scheme]))
+        ## 通过下载处理器下载请求，并返回响应内容
         return handler.download_request(request, spider)
 
     @defer.inlineCallbacks

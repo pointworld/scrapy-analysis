@@ -54,8 +54,11 @@ class Scheduler(object):
 
     def open(self, spider):
         self.spider = spider
+        ## 实例化一个基于优先级的任务队列
         self.mqs = self.pqclass(self._newmq)
+        ## 如果存在 dqdir 则实例化一个基于磁盘的任务队列
         self.dqs = self._dq() if self.dqdir else None
+        ## 调用请求指纹过滤器的 open 方法
         return self.df.open()
 
     def close(self, reason):
@@ -66,13 +69,16 @@ class Scheduler(object):
         return self.df.close(reason)
 
     def enqueue_request(self, request):
+        ## 若请求允许被过滤且在请求指纹中已存在该请求，则返回 False
         if not request.dont_filter and self.df.request_seen(request):
             self.df.log(request, self.spider)
             return False
+        ## 磁盘队列是否入队成功
         dqok = self._dqpush(request)
         if dqok:
             self.stats.inc_value('scheduler/enqueued/disk', spider=self.spider)
         else:
+            ## 没有定义磁盘队列，则使用内存队列
             self._mqpush(request)
             self.stats.inc_value('scheduler/enqueued/memory', spider=self.spider)
         self.stats.inc_value('scheduler/enqueued', spider=self.spider)
@@ -94,10 +100,13 @@ class Scheduler(object):
         return len(self.dqs) + len(self.mqs) if self.dqs else len(self.mqs)
 
     def _dqpush(self, request):
+        ## 是否定义磁盘队列
         if self.dqs is None:
             return
         try:
+            ## 将 request 对象转换为字典
             reqd = request_to_dict(request, self.spider)
+            ## 放入磁盘队列
             self.dqs.push(reqd, -request.priority)
         except ValueError as e:  # non serializable request
             if self.logunser:
@@ -114,6 +123,7 @@ class Scheduler(object):
             return True
 
     def _mqpush(self, request):
+        ## 放入内存队列
         self.mqs.push(request, -request.priority)
 
     def _dqpop(self):
@@ -129,6 +139,8 @@ class Scheduler(object):
         return self.dqclass(join(self.dqdir, 'p%s' % priority))
 
     def _dq(self):
+        ## 实例化一个磁盘任务队列
+
         activef = join(self.dqdir, 'active.json')
         if exists(activef):
             with open(activef) as f:
