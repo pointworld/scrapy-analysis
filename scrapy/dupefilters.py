@@ -33,7 +33,7 @@ class RFPDupeFilter(BaseDupeFilter):
 
     def __init__(self, path=None, debug=False):
         self.file = None
-        ## 指纹集合，使用 set 进行去重
+        ## 指纹集合，使用 set 进行去重，默认是基于内存
         self.fingerprints = set()
         ## 日志去重是否开启
         self.logdupes = True

@@ -142,7 +142,7 @@ def execute(argv=None, settings=None):
         conf.settings = settings
     # ------------------------------------------------------------------
 
-    ## 执行环境是否在项目中
+    ## 执行环境是否在项目中，主要检查 scrapy.cfg 配置文件是否存在
     inproject = inside_project()
     ## 读取 commands 文件夹，把所有的命令类转换为 {cmd_name: cmd_instance, ...} 的字典
     cmds = _get_commands_dict(settings, inproject)

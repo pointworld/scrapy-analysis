@@ -44,11 +44,12 @@ class MiddlewareManager(object):
         middlewares = []
         ## 存放可用的中间件类的路径
         enabled = []
+        ## 依次实例化
         for clspath in mwlist:
             try:
                 ## 根据中间件类路径加载中间件类
                 mwcls = load_object(clspath)
-                ## 基于配置为爬虫对象创建中间件类的实例
+                ## 创建中间件类的实例
                 mw = create_instance(mwcls, settings, crawler)
                 middlewares.append(mw)
                 enabled.append(clspath)

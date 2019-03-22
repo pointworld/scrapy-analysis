@@ -35,16 +35,23 @@ class Crawler(object):
         if isinstance(settings, dict) or settings is None:
             settings = Settings(settings)
 
+        ## 自定义爬虫类
         self.spidercls = spidercls
         self.settings = settings.copy()
+        ## 根据自定义爬虫类中的可能定义的 custom_settigns 属性更新配置
+        ## 优先级为 spider
         self.spidercls.update_settings(self.settings)
 
+        ## 这里得到的只是被覆盖过的配置项，并将其转换为字典
         d = dict(overridden_settings(self.settings))
         logger.info("Overridden settings: %(settings)r", {'settings': d})
 
+        ## 初始化一个信号管理器实例
         self.signals = SignalManager(self)
+        ## 加载一个 STATS 类的实例，用于收集和统计爬取数据
         self.stats = load_object(self.settings['STATS_CLASS'])(self)
 
+        ## 用于对爬虫运行过程中产生的日志的级别数量，进行统计
         handler = LogCounterHandler(self, level=self.settings.get('LOG_LEVEL'))
         logging.root.addHandler(handler)
         if get_scrapy_root_handler() is not None:
@@ -53,13 +60,18 @@ class Crawler(object):
         # lambda is assigned to Crawler attribute because this way it is not
         # garbage collected after leaving __init__ scope
         self.__remove_handler = lambda: logging.root.removeHandler(handler)
+        ## 为 engine_stopped 信号注册 __remove_handler 处理器
+        ## 当产生引擎停止信号时，将会由 __remove_handler 处理器进行处理
         self.signals.connect(self.__remove_handler, signals.engine_stopped)
 
         lf_cls = load_object(self.settings['LOG_FORMATTER'])
+        ## 初始化日志格式化器实例
         self.logformatter = lf_cls.from_crawler(self)
+        ## 初始化插件管理器
         self.extensions = ExtensionManager.from_crawler(self)
 
         self.settings.freeze()
+        ## 标志爬虫运行状态
         self.crawling = False
         self.spider = None
         self.engine = None
@@ -78,16 +90,17 @@ class Crawler(object):
     @defer.inlineCallbacks
     def crawl(self, *args, **kwargs):
         assert not self.crawling, "Crawling already taking place"
+        ## 将爬虫运行状态置为 True
         self.crawling = True
 
         try:
-            ## 从 spiderloader 中找到爬虫类，并实例化该爬虫类
+            ## 创建爬虫实例
             self.spider = self._create_spider(*args, **kwargs)
             ## 创建引擎
             self.engine = self._create_engine()
-            ## 调用爬虫类的 start_requests 方法，获取请求对象
+            ## 调用爬虫实例的 start_requests 方法，获取种子 URL（请求对象）
             start_requests = iter(self.spider.start_requests())
-            ## 执行引擎的 open_spider 方法，传入爬虫实例和初始请求对象
+            ## 执行引擎的 open_spider 方法，传入爬虫实例和初始请求对象，交由引擎调度
             yield self.engine.open_spider(self.spider, start_requests)
             yield defer.maybeDeferred(self.engine.start)
         except Exception:
@@ -108,7 +121,7 @@ class Crawler(object):
             raise
 
     def _create_spider(self, *args, **kwargs):
-        ## 调用爬虫类的 from_crawler 方法实例化爬虫类
+        ## 调用之定义爬虫类的 from_crawler 方法实例化爬虫类
         return self.spidercls.from_crawler(self, *args, **kwargs)
 
     def _create_engine(self):
@@ -194,8 +207,9 @@ class CrawlerRunner(object):
         return self._crawl(crawler, *args, **kwargs)
 
     def _crawl(self, crawler, *args, **kwargs):
+        ## 向爬虫集合中添加爬虫
         self.crawlers.add(crawler)
-        ## 调用 Crawler 的 crawl 方法
+        ## 调用 Crawler 类中的 crawl 方法
         d = crawler.crawl(*args, **kwargs)
         self._active.add(d)
 
