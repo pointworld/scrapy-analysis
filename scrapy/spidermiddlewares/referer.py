@@ -286,6 +286,7 @@ def _load_policy_class(policy, warning_only=False):
 
 
 class RefererMiddleware(object):
+    ## 基于生成 Request 的 Response 的 URL，填充 Request 请求头中的 Referer 字段
 
     def __init__(self, settings=None):
         self.default_policy = DefaultReferrerPolicy

@@ -14,9 +14,13 @@ class Scheduler(object):
 
     def __init__(self, dupefilter, jobdir=None, dqclass=None, mqclass=None,
                  logunser=False, stats=None, pqclass=None):
+        ## 调度器的初始化主要做了两件事：
+        ## 1. 实例化请求指纹过滤器（用来过滤重复请求，可自己重写替换之）
+        ## 2. 定义各种不同类型的任务队列（基于优先级、磁盘、内存的任务队列）
+
         ## 指纹过滤器
         self.df = dupefilter
-        ## 任务队列文件夹
+        ## 任务队列文件夹，如果没有定义 jobdir，那么则使用的是内存队列
         self.dqdir = self._dqdir(jobdir)
         ## 优先级任务队列类
         self.pqclass = pqclass

@@ -68,6 +68,7 @@ class Spider(object_ref):
     def _set_crawler(self, crawler):
         self.crawler = crawler
         self.settings = crawler.settings
+        ## 为 spider_closed（爬虫已关闭） 信号注册处理函数
         crawler.signals.connect(self.close, signals.spider_closed)
 
     def start_requests(self):

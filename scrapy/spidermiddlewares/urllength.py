@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class UrlLengthMiddleware(object):
+    ## 过滤 URL 长度超过配置的请求
+    ##
+    ## 配置项 URLLENGTH_LIMIT - 允许爬取 URL 的最大长度
 
     def __init__(self, maxlength):
         self.maxlength = maxlength

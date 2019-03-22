@@ -63,13 +63,13 @@ def data_path(path, createdir=False):
 
 
 def get_project_settings():
-    ## 如果环境变量中没有 SCRAPY_SETTINGS_MODULE
+    ## 环境变量中是否有 SCRAPY_SETTINGS_MODULE 配置
     if ENVVAR not in os.environ:
         ## 从环境变量中获取 SCRAPY_PROJECT，若无则默认返回 'default'
         project = os.environ.get('SCRAPY_PROJECT', 'default')
         ## 初始化项目环境：
         ## 在项目目录内，通过命令行工具，基于配置文件 scrapy.cfg 初始化项目环境
-        ## 找到用户配置模块（settings），设置到环境变量的 SCRAPY_SETTINGS_MODULE 中
+        ## 找到用户配置模块（settings），设置到环境变量 SCRAPY_SETTINGS_MODULE 中
         ## 将项目基路径加入到 Python 模块的解析路径集中
         init_env(project)
 

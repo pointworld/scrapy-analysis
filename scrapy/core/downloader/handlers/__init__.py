@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 class DownloadHandlers(object):
-    ## 下载处理器
+    ## 下载处理器：
+    ## 管理各种资源对应的下载器，在真正发起网络请求时，选取对应的下载器进行资源下载
 
     def __init__(self, crawler):
         self._crawler = crawler

@@ -12,6 +12,13 @@ logger = logging.getLogger(__name__)
 
 
 class DepthMiddleware(object):
+    ## 该中间件用来追踪在网站内部每个被抓取请求的深度
+    ## 可以被用来限制爬取的最大深度，基于深度控制请求的优先级
+    ##
+    ## 可以通过配置以下配置项对该中间件进行控制
+    ## 1. DEPTH_LIMIT - 对于任何网站，所能允许爬取的最大深度，若值为 0，则表示没有限制
+    ## 2. DEPTH_STATS_VERBOSE - 是否收集每个深度的请求数量
+    ## 3. DEPTH_PRIORITY - 是否根据请求的深度确定其优先级
 
     def __init__(self, maxdepth, stats, verbose_stats=False, prio=1):
         self.maxdepth = maxdepth

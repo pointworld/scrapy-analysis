@@ -76,7 +76,7 @@ class ExecutionEngine(object):
         downloader_cls = load_object(self.settings['DOWNLOADER'])
         ## 实例化下载器
         self.downloader = downloader_cls(crawler)
-        ## 实例化 scraper，它是引擎连接爬虫类和管道类的桥梁
+        ## 实例化 scraper，它是引擎连接爬虫类（Spider）和管道类（Pipeline）的桥梁
         self.scraper = Scraper(crawler)
         ## 指定爬虫关闭的回调函数
         self._spider_closed_callback = spider_closed_callback
@@ -301,7 +301,7 @@ class ExecutionEngine(object):
         logger.info("Spider opened", extra={'spider': spider})
         ## 注册 _next_request 调度方法，循环调度
         nextcall = CallLaterOnce(self._next_request, spider)
-        ## 初始化 scheduler
+        ## 初始化调度器类
         scheduler = self.scheduler_cls.from_crawler(self.crawler)
         ## 调用爬虫中间件的 process_start_requests 方法处理种子请求
         ## 可以定义多个爬虫中间件，每个类都重写该方法，爬虫在调度之前会分别调用你定义好的

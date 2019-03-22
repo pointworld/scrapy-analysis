@@ -15,6 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 class OffsiteMiddleware(object):
+    ## 如果 Spider 中定义了 allowed_domains，该中间件会自动过滤除此之外的域名请求
+    ##
+    ## 如果请求中设置了 dont_filter 为 True，则该请求不会被过滤，不管该请求是否在
+    ## allowed_domains 中
 
     def __init__(self, stats):
         self.stats = stats

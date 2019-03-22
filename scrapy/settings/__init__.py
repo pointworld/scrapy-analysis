@@ -464,6 +464,7 @@ def iter_default_settings():
 
 def overridden_settings(settings):
     """Return a dict of the settings that have been overridden"""
+    ## 从配置中提取出被覆盖过的配置项
     for name, defvalue in iter_default_settings():
         value = settings[name]
         if not isinstance(defvalue, dict) and value != defvalue:
