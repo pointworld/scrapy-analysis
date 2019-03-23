@@ -8,6 +8,7 @@ from pprint import pformat
 from . import default_settings
 
 
+## Scrapy 的配置存在优先级，值越大优先级越高
 SETTINGS_PRIORITIES = {
     'default': 0,
     'command': 10,
@@ -36,6 +37,7 @@ class SettingsAttribute(object):
     This class is intended for internal usage, you should try Settings class
     for settings configuration, not this one.
     """
+    ## 该类用来存储和 settings 属性相关的数据
 
     def __init__(self, value, priority):
         self.value = value
@@ -46,6 +48,8 @@ class SettingsAttribute(object):
 
     def set(self, value, priority):
         """Sets value if priority is higher or equal than current priority."""
+        ## 当要设置的值的优先级大于或等于当前值的优先级时，值和优先级才会被更新
+
         if priority >= self.priority:
             if isinstance(self.value, BaseSettings):
                 value = BaseSettings(value, priority=priority)
@@ -80,8 +84,10 @@ class BaseSettings(MutableMapping):
     value conversion variants. When requesting a stored key, the value with the
     highest priority will be retrieved.
     """
+    ## 该类的实例的行为类似于字典，但为每个键值对都存储了优先级，支持被冻结
 
     def __init__(self, values=None, priority='project'):
+        ## 是否被冻结
         self.frozen = False
         self.attributes = {}
         self.update(values, priority)
@@ -283,13 +289,15 @@ class BaseSettings(MutableMapping):
             :attr:`~scrapy.settings.SETTINGS_PRIORITIES` or an integer
         :type priority: string or int
         """
+        ## 用给定的优先级，从一个模块中存储配置
+
         self._assert_mutability()
         if isinstance(module, six.string_types):
             ## 根据模块路径导入模块
             module = import_module(module)
         for key in dir(module):
-            ## 更新配置，并设置配置项的优先级别
-            ## 非全部大写的配置项或属性会被过滤掉
+            ## 以指定的优先级，为 module 里面每一个全局声明的全大写的变量调用 set 方法
+            ## 非全部大写的配置项会被过滤掉
             if key.isupper():
                 self.set(key, getattr(module, key), priority)
 
@@ -350,6 +358,7 @@ class BaseSettings(MutableMapping):
         Modifications to the new object won't be reflected on the original
         settings.
         """
+        ## 注意这里实现的是深拷贝
         return copy.deepcopy(self)
 
     def freeze(self):
@@ -360,6 +369,8 @@ class BaseSettings(MutableMapping):
         immutable. Trying to change values through the :meth:`~set` method and
         its variants won't be possible and will be alerted.
         """
+        ## 调用该方法后，对当前 settings 的任何改变都将无效
+
         self.frozen = True
 
     def frozencopy(self):
@@ -368,6 +379,8 @@ class BaseSettings(MutableMapping):
 
         Alias for a :meth:`~freeze` call in the object returned by :meth:`copy`.
         """
+        ## 返回一个深拷贝后被冻结的 settings
+
         copy = self.copy()
         copy.freeze()
         return copy
@@ -379,6 +392,7 @@ class BaseSettings(MutableMapping):
         return len(self.attributes)
 
     def _to_dict(self):
+        ## 将 settings 对象转换为字典
         return {k: (v._to_dict() if isinstance(v, BaseSettings) else v)
                 for k, v in six.iteritems(self)}
 
@@ -395,6 +409,8 @@ class BaseSettings(MutableMapping):
         This method can be useful for example for printing settings
         in Scrapy shell.
         """
+        ## 将当前配置深拷贝后，再转换为字典返回
+
         settings = self.copy()
         return settings._to_dict()
 
@@ -439,6 +455,8 @@ class Settings(BaseSettings):
     of this class, the new object will have the global default settings
     described on :ref:`topics-settings-ref` already populated.
     """
+    ## 该对象存储了 Scrapy 设置，用于其内部组件的配置，可以被定制
+    ## 当该类被实例化后，会得到一个默认的全局配置
 
     def __init__(self, values=None, priority='project'):
         # Do not pass kwarg values here. We don't want to promote user-defined

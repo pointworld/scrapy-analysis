@@ -50,7 +50,9 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 8
 ## 任何一个 IP，所能发起请求的最大并发量
 CONCURRENT_REQUESTS_PER_IP = 0
 
+## 是否启用 cookies 中间件，如果禁用，将不会用 cookies 发送到 web 服务器
 COOKIES_ENABLED = True
+## 如果启用，Scrapy 将会输出每个请求发送的 cookies，以及从响应中获取的 cookies
 COOKIES_DEBUG = False
 
 ## 在 Scrapy shell 中，用来实例化 items 的默认类
@@ -114,9 +116,12 @@ DOWNLOADER_MIDDLEWARES = {}
 ## 默认的下载器中间件
 DOWNLOADER_MIDDLEWARES_BASE = {
     # Engine side
+
+    ## 该中间件用来过滤被 robots 协议排除的请求，默认是开启状态
     'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware': 100,
     'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware': 300,
     'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware': 350,
+    ## 默认请求头中间件
     'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware': 400,
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': 500,
     'scrapy.downloadermiddlewares.retry.RetryMiddleware': 550,
@@ -124,10 +129,12 @@ DOWNLOADER_MIDDLEWARES_BASE = {
     'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware': 580,
     'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 590,
     'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': 600,
+    ## cookies 中间件
     'scrapy.downloadermiddlewares.cookies.CookiesMiddleware': 700,
     'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 750,
     'scrapy.downloadermiddlewares.stats.DownloaderStats': 850,
     'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware': 900,
+
     # Downloader side
 }
 

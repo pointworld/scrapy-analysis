@@ -1,4 +1,32 @@
-# Scrapy 源码分析
+# Scrapy 源码学习
+
+
+## Scrapy 中使用到的设计模式
+
+### 观察者模式 - 信号处理
+
+
+## crawler、scraper、spider 三者的区别
+
+- Crawler (scrapy.crawler) is the main entry point to Scrapy API. It provides access to all Scrapy core components, and it's used to hook extensions functionality into Scrapy.
+
+- Scraper (scrapy.core.scraper) component is responsible for parsing responses and extracting information from them. It's being run from the Engine, and it's used to run your spiders.
+
+- scrapy.spiders is a module containing base Spider implementation (that you use to write your spiders), together with some common spiders available out of the box (like the CrawlSpider for ruleset-based crawling, the SitemapSpider for sitemap based crawling, or XMLFeedSpider for crawling the XML feeds).
+
+
+## Scrapy 是一个基于配置驱动的框架
+
+配置存在优先级，值越大优先级越高
+
+SETTINGS_PRIORITIES = {
+    'default': 0,
+    'command': 10,
+    'project': 20,
+    'spider': 30,
+    'cmdline': 40,
+}
+
 
 ## Scrapy 源码目录结构
 
@@ -10,7 +38,7 @@
     ├── __main__.py
     ├── _monkeypatches.py
     ├── cmdline.py
-    ├── commands
+    ├── commands                                ## 命令包，存放命令模块
     │   ├── __init__.py
     │   ├── bench.py
     │   ├── check.py
@@ -171,7 +199,7 @@
     │       ├── crawl.tmpl
     │       ├── csvfeed.tmpl
     │       └── xmlfeed.tmpl
-    ├── utils
+    ├── utils                                  ## 工具包，存放相关工具模块 
     │   ├── __init__.py
     │   ├── benchserver.py
     │   ├── boto.py

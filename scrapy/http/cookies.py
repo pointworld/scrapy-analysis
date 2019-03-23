@@ -41,9 +41,12 @@ class CookieJar(object):
             if host in self.jar._cookies:
                 cookies += self.jar._cookies_for_domain(host, wreq)
 
+        ## 得到一个 cookie 字符串的列表，形如：['key1=val1', ...]
         attrs = self.jar._cookie_attrs(cookies)
         if attrs:
             if not wreq.has_header("Cookie"):
+                ## 用分号 ; 将 cookie 字符串列表连接起来，形如：'key1=val1; key2=val2; ...'
+                ## 将该值用列表包裹起来，作为 wreq 中 request.headers 中 Cookie 的值
                 wreq.add_unredirected_header("Cookie", "; ".join(attrs))
 
         self.processed += 1
