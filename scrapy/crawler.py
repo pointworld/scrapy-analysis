@@ -28,6 +28,9 @@ logger = logging.getLogger(__name__)
 class Crawler(object):
 
     def __init__(self, spidercls, settings=None):
+        ## crawler 对象必须用 scrapy.spiders.Spider 的子类和一个 scrapy.settings.Settings
+        ## 对象来实例化
+
         if isinstance(spidercls, Spider):
             raise ValueError(
                 'The spidercls argument must be a class, not an object')
@@ -37,6 +40,7 @@ class Crawler(object):
 
         ## 自定义爬虫类
         self.spidercls = spidercls
+        ## crawler 的配置管理器，用来为插件和中间件提供访问该 crawler 的 Scrapy 配置的入口
         self.settings = settings.copy()
         ## 根据自定义爬虫类中的可能定义的 custom_settigns 属性更新配置
         ## 优先级为 spider
@@ -46,9 +50,9 @@ class Crawler(object):
         d = dict(overridden_settings(self.settings))
         logger.info("Overridden settings: %(settings)r", {'settings': d})
 
-        ## 初始化一个信号管理器实例
+        ## crawler 的信号管理器，被插件和中间件用来将它们自身集成到 Scrapy 功能中
         self.signals = SignalManager(self)
-        ## 加载一个 STATS 类的实例，用于收集和统计爬取数据
+        ## crawler 的 stats 收集器，用来从插件和中间件中记录它们的行为和访问其他插件收集到的数据
         self.stats = load_object(self.settings['STATS_CLASS'])(self)
 
         ## 用于对爬虫运行过程中产生的日志的级别数量，进行统计
@@ -67,13 +71,15 @@ class Crawler(object):
         lf_cls = load_object(self.settings['LOG_FORMATTER'])
         ## 初始化日志格式化器实例
         self.logformatter = lf_cls.from_crawler(self)
-        ## 初始化插件管理器
+        ## 用来追踪可用插件的插件管理器
         self.extensions = ExtensionManager.from_crawler(self)
 
         self.settings.freeze()
         ## 标志爬虫运行状态
         self.crawling = False
+        ## 当前正在爬取的 spider
         self.spider = None
+        ## 执行引擎，用来协调调度器、下载器、spiders 之间的爬取逻辑
         self.engine = None
 
     @property
@@ -89,6 +95,9 @@ class Crawler(object):
 
     @defer.inlineCallbacks
     def crawl(self, *args, **kwargs):
+        ## Starts the crawler by instantiating its spider class with the given
+        ## args and kwargs arguments, while setting the execution engine in motion.
+
         assert not self.crawling, "Crawling already taking place"
         ## 将爬虫运行状态置为 True
         self.crawling = True
@@ -149,6 +158,7 @@ class CrawlerRunner(object):
     """
     ## 这是一个帮助器类，用来在一个已经建立好的 Twisted reactor 中，追踪、管理和运行爬虫
 
+    ## 由 crawl 方法启动的爬虫集合，该值只能读取
     crawlers = property(
         lambda self: self._crawlers,
         doc="Set of :class:`crawlers <scrapy.crawler.Crawler>` started by "
@@ -196,24 +206,26 @@ class CrawlerRunner(object):
 
         :param dict kwargs: keyword arguments to initialize the spider
         """
-        ## 用给定的参数运行一个爬虫
+        ## 用给定的参数运行一个 crawler
+        ## 会调用 Crawler 中的 crawl 方法，同时追踪它，以便之后停止它
 
         if isinstance(crawler_or_spidercls, Spider):
             raise ValueError(
                 'The crawler_or_spidercls argument cannot be a spider object, '
                 'it must be a spider class (or a Crawler object)')
-        ## 创建爬虫实例
+        ## 创建 crawler 实例
         crawler = self.create_crawler(crawler_or_spidercls)
         return self._crawl(crawler, *args, **kwargs)
 
     def _crawl(self, crawler, *args, **kwargs):
-        ## 向爬虫集合中添加爬虫
+        ## 向 crawlers 集合中添加 crawler
         self.crawlers.add(crawler)
         ## 调用 Crawler 类中的 crawl 方法
         d = crawler.crawl(*args, **kwargs)
         self._active.add(d)
 
         def _done(result):
+            ## 从 crawlers 集合中丢弃掉一个 crawler
             self.crawlers.discard(crawler)
             self._active.discard(d)
             self.bootstrap_failed |= not getattr(crawler, 'spider', None)
@@ -232,7 +244,7 @@ class CrawlerRunner(object):
           a spider with this name in a Scrapy project (using spider loader),
           then creates a Crawler instance for it.
         """
-        ## 返回一个爬虫实例
+        ## 返回一个 crawler 实例
 
         if isinstance(crawler_or_spidercls, Spider):
             raise ValueError(
@@ -243,7 +255,7 @@ class CrawlerRunner(object):
         return self._create_crawler(crawler_or_spidercls)
 
     def _create_crawler(self, spidercls):
-        ## 如果参数 spidercls 是字符串，则从 spider_loader 中加载这个爬虫类
+        ## 如果参数 spidercls 是字符串，则从 spider_loader 中加载这个 Spider 子类
         if isinstance(spidercls, six.string_types):
             spidercls = self.spider_loader.load(spidercls)
         ## 根据该 spidercls 和配置创建一个 Crawler 实例
@@ -255,6 +267,7 @@ class CrawlerRunner(object):
 
         Returns a deferred that is fired when they all have ended.
         """
+        ## 同时停止所有正在运行的爬取任务
         return defer.DeferredList([c.stop() for c in list(self.crawlers)])
 
     @defer.inlineCallbacks
@@ -291,20 +304,22 @@ class CrawlerProcess(CrawlerRunner):
     accordingly) unless writing scripts that manually handle the crawling
     process. See :ref:`run-from-script` for an example.
     """
-    ## 在一个进程中同时运行多个爬虫的类
+    ## 在一个进程中同时运行多个 crawler
+    ## 该类继承自 CrawlerRunner，能够支持启动一个 Twisted reactor 和处理 shutdown 信号
+    ## 同时也配置了 logging 服务
 
     def __init__(self, settings=None, install_root_handler=True):
         ## 父类初始化
         super(CrawlerProcess, self).__init__(settings)
-        ## 安装爬虫关闭时的处理器
+        ## 处理 shutdown 信号
         install_shutdown_handlers(self._signal_shutdown)
-        ## 为 scrapy 配置日志服务
+        ## 为 Scrapy 配置默认的日志服务
         configure_logging(self.settings, install_root_handler)
         ## 输出 scrapy 的相关信息（启动状态，版本...）
         log_scrapy_info(self.settings)
 
     def _signal_shutdown(self, signum, _):
-        ## 爬虫关闭时的处理器
+        ## shutdown 信号的处理器
 
         install_shutdown_handlers(self._signal_kill)
         signame = signal_names[signum]

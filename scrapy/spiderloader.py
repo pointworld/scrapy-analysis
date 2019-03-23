@@ -17,15 +17,17 @@ class SpiderLoader(object):
     SpiderLoader is a class which locates and loads spiders
     in a Scrapy project.
     """
+    ## 该类主要用于在 Scrapy 项目中定位和加载 spiders
+
     def __init__(self, settings):
-        ## 根据配置文件获取存放爬虫脚本的路径
+        ## 根据配置文件获取存放 spider 模块的路径
         self.spider_modules = settings.getlist('SPIDER_MODULES')
         self.warn_only = settings.getbool('SPIDER_LOADER_WARN_ONLY')
-        ## 用于储存爬虫名与爬虫类的映射
+        ## 用于储存 spider 名与 spider 类的映射
         self._spiders = {}
-        ## 用于储存爬虫名与 ['爬虫模块名', '爬虫类名'] 的映射
+        ## 用于储存 spider 名字与 ['spider 模块名', 'spider 类名'] 的映射
         self._found = defaultdict(list)
-        ## 加载所有爬虫
+        ## 加载所有 spiders
         self._load_all_spiders()
 
     def _check_name_duplicates(self):
@@ -64,6 +66,7 @@ class SpiderLoader(object):
 
     @classmethod
     def from_settings(cls, settings):
+        ## 基于配置创建 Spider 加载器的实例
         return cls(settings)
 
     def load(self, spider_name):
@@ -71,6 +74,8 @@ class SpiderLoader(object):
         Return the Spider class for the given spider name. If the spider
         name is not found, raise a KeyError.
         """
+        ## 根据给定的名字返回对应的 Spider 类
+
         try:
             return self._spiders[spider_name]
         except KeyError:
@@ -80,6 +85,7 @@ class SpiderLoader(object):
         """
         Return the list of spider names that can handle the given request.
         """
+        ## 返回可以被给定请求处理的 spiders 名字的列表
         return [name for name, cls in self._spiders.items()
                 if cls.handles_request(request)]
 
@@ -87,4 +93,5 @@ class SpiderLoader(object):
         """
         Return a list with the names of all spiders available in the project.
         """
+        ## 返回项目中所有可用的 spiders 名字组成的列表
         return list(self._spiders.keys())
