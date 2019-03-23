@@ -6,6 +6,7 @@ import datetime
 from scrapy import signals
 
 class CoreStats(object):
+    ## 该插件主要用来采集核心的统计数据（例如，已抓取的 items 数量，爬虫开始和结束时间等）
 
     def __init__(self, stats):
         self.stats = stats
