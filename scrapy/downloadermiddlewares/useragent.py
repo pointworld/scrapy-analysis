@@ -5,6 +5,10 @@ from scrapy import signals
 
 class UserAgentMiddleware(object):
     """This middleware allows spiders to override the user_agent"""
+    ## 用户代理中间件
+    ## 为请求设置用户代理
+    ## 会尝试用配置中取 USER_AGENT 的值，或在 spider 中取 user_agent 的值
+    ## 如果取不到，则默认使用 'Scrapy' 作为用户代理
 
     def __init__(self, user_agent='Scrapy'):
         self.user_agent = user_agent

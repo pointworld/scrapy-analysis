@@ -18,6 +18,7 @@ class AjaxCrawlMiddleware(object):
     Handle 'AJAX crawlable' pages marked as crawlable via meta tag.
     For more info see https://developers.google.com/webmasters/ajax-crawling/docs/getting-started.
     """
+    ## 该中间件用来处理被 meta 标签标记为可爬取的 'AJAX crawlable' 页面
 
     def __init__(self, settings):
         if not settings.getbool('AJAXCRAWL_ENABLED'):

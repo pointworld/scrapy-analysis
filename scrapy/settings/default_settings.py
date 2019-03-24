@@ -92,7 +92,7 @@ DOWNLOAD_HANDLERS_BASE = {
     'ftp': 'scrapy.core.downloader.handlers.ftp.FTPDownloadHandler',
 }
 
-## 在下载超时之前，下载器应该等待的事件
+## 在下载超时之前，下载器应该等待的时间
 DOWNLOAD_TIMEOUT = 180      # 3mins
 
 ## 下载器能够下载的最大响应字节数
@@ -117,22 +117,35 @@ DOWNLOADER_MIDDLEWARES = {}
 DOWNLOADER_MIDDLEWARES_BASE = {
     # Engine side
 
-    ## 该中间件用来过滤被 robots 协议排除的请求，默认是开启状态
+    ## robots 协议处理中间件：用来过滤被 robots 协议排除的请求，默认是开启状态
     'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware': 100,
+    ## HTTP 基础认证授权中间件：对需要进行 HTTP 授权的 spiders 来说，只需要在
+    ## 这些 spiders 中设置 http_user 和/或 http_pass 属性即可
     'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware': 300,
+    ## 下载超时中间件：用于延迟请求的下载
     'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware': 350,
-    ## 默认请求头中间件
+    ## 默认请求头中间件：默认添加请求头
     'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware': 400,
+    ## 用户代理中间件：为请求添加用户代理
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': 500,
+    ## 重发请求中间件：用来在遇到失败的请求时，重发该请求
     'scrapy.downloadermiddlewares.retry.RetryMiddleware': 550,
+    ## ajax 可爬取中间件：用来处理被 meta 标签标记为可爬取的 'AJAX crawlable' 页面
     'scrapy.downloadermiddlewares.ajaxcrawl.AjaxCrawlMiddleware': 560,
+    ## MetaRefreshMiddleware：该中间件根据 meta-refresh html 标签处理 request 重定向
     'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware': 580,
+    ## HttpCompressionMiddleware：该中间件提供对压缩（gzip，deflate）数据的支持
     'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 590,
+    ## 重定向中间件：该中间件根据 response 的状态码处理重定向的 request
     'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': 600,
-    ## cookies 中间件
+    ## cookies 中间件：追踪 web server 发送的 cookie，并在之后的 request 中发送回去，如浏览器
     'scrapy.downloadermiddlewares.cookies.CookiesMiddleware': 700,
+    ## HTTP 代理中间件：提供对 request 设置 HTTP 代理的支持，可以在 request.meta 中设置 proxy 来开启代理
     'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 750,
+    ## DownloaderStats：用于收集从所有经由 requests, responses 和 exceptions 的统计数据
     'scrapy.downloadermiddlewares.stats.DownloaderStats': 850,
+    ## HTTP 缓存中间件：该中间件为所有 HTTP request 和 Response 提供底层缓存支持
+    ## 其由 cache 存储后端及 cache 策略组成
     'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware': 900,
 
     # Downloader side

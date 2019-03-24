@@ -5,6 +5,7 @@ from scrapy.utils.python import global_object_name
 
 
 class DownloaderStats(object):
+    ## DownloaderStats：用于收集从所有经由 requests, responses 和 exceptions 的统计数据
 
     def __init__(self, stats):
         self.stats = stats
@@ -16,13 +17,17 @@ class DownloaderStats(object):
         return cls(crawler.stats)
 
     def process_request(self, request, spider):
+        ## 请求数量的统计
         self.stats.inc_value('downloader/request_count', spider=spider)
+        ## 请求方法数量的统计
         self.stats.inc_value('downloader/request_method_count/%s' % request.method, spider=spider)
         reqlen = len(request_httprepr(request))
         self.stats.inc_value('downloader/request_bytes', reqlen, spider=spider)
 
     def process_response(self, request, response, spider):
+        ## 响应数量的统计
         self.stats.inc_value('downloader/response_count', spider=spider)
+        ## 响应状态码数量的统计
         self.stats.inc_value('downloader/response_status_count/%s' % response.status, spider=spider)
         reslen = len(response_httprepr(response))
         self.stats.inc_value('downloader/response_bytes', reslen, spider=spider)
@@ -30,5 +35,7 @@ class DownloaderStats(object):
 
     def process_exception(self, request, exception, spider):
         ex_class = global_object_name(exception.__class__)
+        ## 异常数量的统计
         self.stats.inc_value('downloader/exception_count', spider=spider)
+        ## 异常类型数量的统计
         self.stats.inc_value('downloader/exception_type_count/%s' % ex_class, spider=spider)

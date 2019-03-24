@@ -18,6 +18,7 @@ class BaseRedirectMiddleware(object):
         if not settings.getbool(self.enabled_setting):
             raise NotConfigured
 
+        ## 单个 request 被重定向的最大次数
         self.max_redirect_times = settings.getint('REDIRECT_MAX_TIMES')
         self.priority_adjust = settings.getint('REDIRECT_PRIORITY_ADJUST')
 
@@ -57,6 +58,8 @@ class RedirectMiddleware(BaseRedirectMiddleware):
     Handle redirection of requests based on response status
     and meta-refresh html tag.
     """
+    ## 重定向中间件：该中间件根据响应的状态码处理 request 重定向
+
     def process_response(self, request, response, spider):
         if (request.meta.get('dont_redirect', False) or
                 response.status in getattr(spider, 'handle_httpstatus_list', []) or
@@ -64,6 +67,7 @@ class RedirectMiddleware(BaseRedirectMiddleware):
                 request.meta.get('handle_httpstatus_all', False)):
             return response
 
+        ## 允许被重定向的状态码
         allowed_status = (301, 302, 303, 307, 308)
         if 'Location' not in response.headers or response.status not in allowed_status:
             return response

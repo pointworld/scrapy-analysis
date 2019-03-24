@@ -18,6 +18,8 @@ except ImportError:
 class HttpCompressionMiddleware(object):
     """This middleware allows compressed (gzip, deflate) traffic to be
     sent/received from web sites"""
+    ## 该中间件允许对从 web sites 发送或接收的数据进行压缩处理（gzip，deflate）
+
     @classmethod
     def from_crawler(cls, crawler):
         if not crawler.settings.getbool('COMPRESSION_ENABLED'):
@@ -51,6 +53,8 @@ class HttpCompressionMiddleware(object):
         return response
 
     def _decode(self, body, encoding):
+        ## 解压缩
+
         if encoding == b'gzip' or encoding == b'x-gzip':
             body = gunzip(body)
 

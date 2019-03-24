@@ -12,6 +12,8 @@ from scrapy.utils.python import to_bytes
 
 
 class HttpProxyMiddleware(object):
+    ## HTTP 代理中间件
+    ## 该中间件提供对 request 设置 HTTP 代理的支持，可以通过在 Request.meta 中设置 proxy 来开启代理
 
     def __init__(self, auth_encoding='latin-1'):
         self.auth_encoding = auth_encoding
@@ -33,6 +35,7 @@ class HttpProxyMiddleware(object):
         return base64.b64encode(user_pass)
 
     def _get_proxy(self, url, orig_type):
+        ## 代理类型，用户名，密码，主机和端口
         proxy_type, user, password, hostport = _parse_proxy(url)
         proxy_url = urlunparse((proxy_type or orig_type, hostport, '', '', '', ''))
 
@@ -65,6 +68,7 @@ class HttpProxyMiddleware(object):
             return
 
         if scheme in self.proxies:
+            ## 设置代理
             self._set_proxy(request, scheme)
 
     def _set_proxy(self, request, scheme):

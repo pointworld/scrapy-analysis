@@ -12,6 +12,9 @@ from scrapy import signals
 class HttpAuthMiddleware(object):
     """Set Basic HTTP Authorization header
     (http_user and http_pass spider class attributes)"""
+    ## 设置基本 HTTP 授权头，即：
+    ## 如果 spider 中设置了 http_user 和 http_pass，则将这两个属性值经过一定的处理
+    ## 并通过 base64 编码后，添加到请求头中，作为 Authorization 字段的值
 
     @classmethod
     def from_crawler(cls, crawler):
